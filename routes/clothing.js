@@ -2,42 +2,47 @@ const express = require('express');
 const router = express.Router();
 const ClothingItem = require('../models/ClothingItem');
 
-// Get back all the ducks
-router.get('/', (req, res) => {
-    Duck.find()
-        .then(data => {
-            res.json(data);
-        })
-        .catch(err => {
-            res.status(400).json({ message: err });
-        })
-})
-
-// Register a duck
+// Create a clothing item
 router.post('/', (req, res) => {
-    // console.log(req.body);
-    const newDuck = new Duck({
-        name: req.body.name,
-        money: req.body.money
-    });
-    newDuck.save()
-        .then(data => {
-            res.json(data);
-        })
-        .catch(err => {
-            res.status(400).json({ message: err });
-        })
-})
 
-// Get a specific duck
-router.get('/:name', (req, res) => {
-    
-    Duck.findOne({name: req.params.name})
-        .then(data => {
-            res.json(data);
+    ClothingItem.findOne({name: req.body.name})
+        .then(existingItem => {
+            if (existingItem != null) {
+                // update the existing clothing item
+                const prevUnits = existingItem.units
+                const prevPoints = existingItem.points
+                const currUnits = req.body.units
+                const currPoints = req.body.points
+
+                existingItem.units = prevUnits + currUnits
+                existingItem.points = (prevUnits * prevPoints + currUnits * currPoints) / existingItem.units
+
+                existingItem.save()
+                    .then(data => {
+                        res.json(data);
+                    })
+                    .catch(err => {
+                        res.status(400).json({ message: err });
+                    })
+
+            } else {
+                // create a new clothing item
+                const newClothing = new ClothingItem({
+                    name: req.body.name,
+                    units: req.body.units,
+                    points: req.body.points
+                });
+                newClothing.save()
+                    .then(data => {
+                        res.json(data);
+                    })
+                    .catch(err => {
+                        res.status(400).json({ message: err });
+                    })
+            }
         })
         .catch(err => {
-            res.status(400).json({ message: err });
+            res.status(400).json({ message: err});
         })
 })
 
